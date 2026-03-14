@@ -1,6 +1,8 @@
-# AXe iOS Skill
+# iOS E2E Skill
 
-A [Claude Code](https://docs.anthropic.com/en/docs/claude-code) plugin for testing and automating iOS apps in the Simulator using [AXe](https://github.com/cameroncooke/axe) — a fast, modern CLI for accessibility-based UI automation.
+A [Claude Code](https://docs.anthropic.com/en/docs/claude-code) plugin for end-to-end iOS app testing in the Simulator. Gives coding agents the ability to interact with, inspect, and verify iOS app behavior using accessibility-driven UI automation.
+
+Currently powered by [AXe](https://github.com/cameroncooke/axe) — a fast, modern CLI that talks directly to the macOS Accessibility API.
 
 ## What it does
 
@@ -12,7 +14,7 @@ When installed, this plugin teaches Claude Code how to:
 - **Wait** for UI elements to appear before interacting
 - **Screenshot** the simulator for visual verification
 
-All interactions use AXe's accessibility-driven approach, which is more reliable than pixel-based automation and survives UI layout changes.
+All interactions use accessibility-driven automation, which is more reliable than pixel-based approaches and survives UI layout changes.
 
 ## Prerequisites
 
@@ -27,7 +29,7 @@ All interactions use AXe's accessibility-driven approach, which is more reliable
 
 ```
 /plugin marketplace add alpharigel/claude-plugins
-/plugin install axe-ios-skill@alpharigel-tools
+/plugin install ios-e2e-skill@alpharigel-tools
 ```
 
 ### Manual (per-project)
@@ -36,7 +38,7 @@ All interactions use AXe's accessibility-driven approach, which is more reliable
 cd your-project
 mkdir -p .claude/plugins
 cd .claude/plugins
-git clone https://github.com/alpharigel/axe-ios-skill.git
+git clone https://github.com/alpharigel/ios-e2e-skill.git
 ```
 
 ### Manual (global)
@@ -44,7 +46,7 @@ git clone https://github.com/alpharigel/axe-ios-skill.git
 ```bash
 mkdir -p ~/.claude/plugins
 cd ~/.claude/plugins
-git clone https://github.com/alpharigel/axe-ios-skill.git
+git clone https://github.com/alpharigel/ios-e2e-skill.git
 ```
 
 ## Usage
@@ -59,7 +61,7 @@ Once installed, Claude Code automatically detects the skill when you ask about i
 > What's on the simulator screen right now?
 ```
 
-You can also invoke the skill directly with `/axe-ios-skill:axe-ios`.
+You can also invoke the skill directly with `/ios-e2e-skill:ios-e2e`.
 
 ### Helper Scripts
 
@@ -71,7 +73,7 @@ The plugin includes Python helper scripts that Claude Code invokes automatically
 
 These scripts can also be imported as Python libraries in your own test code.
 
-## Why AXe over alternatives?
+## Why AXe?
 
 | Tool | Status | Issues |
 |------|--------|--------|
@@ -82,7 +84,7 @@ These scripts can also be imported as Python libraries in your own test code.
 
 AXe is a Swift CLI binary that talks directly to the Accessibility API. No Python version issues, no daemon, no complex setup.
 
-## Key AXe gotchas
+## Key gotchas
 
 These are non-obvious things we learned the hard way:
 

@@ -1,6 +1,6 @@
 ---
-name: axe-ios
-description: Test and automate iOS apps in the Simulator using AXe CLI. Use when the user asks to test iOS UI, interact with the simulator, verify app behavior, inspect accessibility trees, take screenshots, or automate swipe/tap/type gestures.
+name: ios-e2e
+description: End-to-end iOS app testing in the Simulator. Use when the user asks to test iOS UI, interact with the simulator, verify app behavior, inspect accessibility trees, take screenshots, or automate swipe/tap/type gestures.
 ---
 
 # iOS Simulator Testing with AXe
