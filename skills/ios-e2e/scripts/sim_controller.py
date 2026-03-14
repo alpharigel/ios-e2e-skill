@@ -109,22 +109,48 @@ class SimController:
         path = result.stdout.strip()
         return path if path else None
 
-    def clear_app_data(self) -> None:
-        """Delete the app's local data stores (SwiftData/CoreData).
+    def clear_app_data(self, app_path: str | None = None) -> None:
+        """Fully clear all app data by uninstalling and reinstalling.
 
-        Removes default.store files from the app's Application Support directory.
+        UserDefaults.standard on the simulator is stored outside the app
+        container, so deleting container files alone is not sufficient.
+        Uninstall/reinstall guarantees a clean slate.
+
+        If app_path is provided, reinstalls from that path.
+        Otherwise attempts to find a built .app in DerivedData.
         Must be called while the app is NOT running.
+        """
+        bid = self._require_bundle_id()
+        self._run("uninstall", self.udid, bid, check=False)
+        time.sleep(0.5)
+        install_path = app_path or self._find_built_app()
+        if install_path:
+            self._run("install", self.udid, install_path)
+
+    def _find_built_app(self) -> str | None:
+        """Find the most recent Debug .app bundle in DerivedData."""
+        dd_path = os.path.expanduser("~/Library/Developer/Xcode/DerivedData")
+        pattern = os.path.join(dd_path, "**", "Debug-iphonesimulator", "*.app")
+        matches = glob.glob(pattern, recursive=True)
+        if not matches:
+            return None
+        return max(matches, key=os.path.getmtime)
+
+    def get_app_log(self, log_filename: str, subdir: str = "Documents") -> str:
+        """Read a log file from the app's container.
+
+        Args:
+            log_filename: Name of the log file (e.g. 'debug.log')
+            subdir: Subdirectory within the container (default: 'Documents')
         """
         container = self.get_app_container("data")
         if not container:
-            return
-        app_support = os.path.join(container, "Library", "Application Support")
-        for pattern in ["default.store", "default.store-wal", "default.store-shm"]:
-            for f in glob.glob(os.path.join(app_support, pattern)):
-                try:
-                    os.remove(f)
-                except OSError:
-                    pass
+            return ""
+        log_path = os.path.join(container, subdir, log_filename)
+        if os.path.exists(log_path):
+            with open(log_path) as f:
+                return f.read()
+        return ""
 
     # ------------------------------------------------------------------
     # Screenshots & media
@@ -201,7 +227,13 @@ def main() -> None:
     ss_p.add_argument("--path", default="/tmp/screenshot.png", help="Output path")
 
     # clear-data
-    sub.add_parser("clear-data", help="Clear app's local data stores")
+    cd_p = sub.add_parser("clear-data", help="Clear all app data (uninstall/reinstall)")
+    cd_p.add_argument("--app-path", help="Path to .app bundle to reinstall (auto-detects if omitted)")
+
+    # get-log
+    log_p = sub.add_parser("get-log", help="Read a log file from the app container")
+    log_p.add_argument("--filename", required=True, help="Log filename (e.g. debug.log)")
+    log_p.add_argument("--subdir", default="Documents", help="Container subdirectory (default: Documents)")
 
     # list-booted
     sub.add_parser("list-booted", help="List all booted simulators")
@@ -250,8 +282,16 @@ def main() -> None:
     elif args.command == "clear-data":
         sim.terminate()
         time.sleep(0.5)
-        sim.clear_app_data()
+        sim.clear_app_data(app_path=args.app_path)
         print(f"Cleared data for {args.bundle_id} on {udid}")
+
+    elif args.command == "get-log":
+        content = sim.get_app_log(args.filename, args.subdir)
+        if content:
+            print(content)
+        else:
+            print(f"No log found: {args.filename}", file=sys.stderr)
+            sys.exit(1)
 
 
 if __name__ == "__main__":

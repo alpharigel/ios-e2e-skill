@@ -36,8 +36,14 @@ class UIDriver:
     # ------------------------------------------------------------------
 
     def tap_label(self, label: str, post_delay: float = 0.3) -> None:
-        """Tap an element by its accessibility label."""
-        self._axe("tap", "--label", label)
+        """Tap an element by its accessibility label.
+        Falls back to coordinate-based tap if AXe label tap fails."""
+        result = self._axe("tap", "--label", label, check=False)
+        if result.returncode != 0:
+            center = self.find_element_center(label)
+            if center is None:
+                raise RuntimeError(f"Element '{label}' not found in UI tree")
+            self._axe("tap", "-x", str(center[0]), "-y", str(center[1]))
         if post_delay > 0:
             time.sleep(post_delay)
 
@@ -116,6 +122,20 @@ class UIDriver:
         start_x = (w * 3) // 4
         self.swipe(start_x, y, start_x - distance, y)
 
+    def scroll_down(self, distance: int = 300) -> None:
+        """Scroll down in the current view."""
+        w, h = self.screen_size()
+        cx = w // 2
+        start_y = h // 2
+        self.swipe(cx, start_y, cx, start_y - distance, duration=0.3)
+
+    def scroll_up(self, distance: int = 300) -> None:
+        """Scroll up in the current view."""
+        w, h = self.screen_size()
+        cx = w // 2
+        start_y = h // 2
+        self.swipe(cx, start_y, cx, start_y + distance, duration=0.3)
+
     def pull_to_refresh(self) -> None:
         """Pull-to-refresh: long downward swipe from near top of screen."""
         w, h = self.screen_size()
@@ -169,6 +189,12 @@ class UIDriver:
         nodes = self._flatten_tree(tree)
         label_lower = label.lower()
         return [n for n in nodes if label_lower in self._node_label(n)]
+
+    def dump_labels(self) -> list[str]:
+        """Return all non-empty labels in the UI tree (useful for debugging)."""
+        tree = self.get_ui_tree()
+        nodes = self._flatten_tree(tree)
+        return [self._node_label(n) for n in nodes if self._node_label(n)]
 
     def describe_screen(self) -> str:
         """Return a human-readable summary of the current screen."""
@@ -232,6 +258,14 @@ def main() -> None:
     ct_p = sub.add_parser("clear-and-type", help="Clear field and type new text")
     ct_p.add_argument("--text", required=True)
 
+    # scroll
+    scroll_p = sub.add_parser("scroll", help="Scroll the view")
+    scroll_p.add_argument("--direction", choices=["up", "down"], required=True)
+    scroll_p.add_argument("--distance", type=int, default=300, help="Scroll distance in points")
+
+    # dump-labels
+    sub.add_parser("dump-labels", help="List all labels in the UI tree (debug)")
+
     # screen-size
     sub.add_parser("screen-size", help="Get screen dimensions")
 
@@ -243,12 +277,13 @@ def main() -> None:
 
     elif args.command == "tap":
         if args.label:
-            center = ui.find_element_center(args.label)
-            if center:
-                ui.tap_xy(*center)
-                print(f"Tapped \"{args.label}\" at ({center[0]}, {center[1]})")
-            else:
-                print(f"Element \"{args.label}\" not found", file=sys.stderr)
+            try:
+                ui.tap_label(args.label)
+                center = ui.find_element_center(args.label)
+                coords = f" at ({center[0]}, {center[1]})" if center else ""
+                print(f"Tapped \"{args.label}\"{coords}")
+            except RuntimeError as e:
+                print(str(e), file=sys.stderr)
                 sys.exit(1)
         elif args.x is not None and args.y is not None:
             ui.tap_xy(args.x, args.y)
@@ -304,6 +339,19 @@ def main() -> None:
     elif args.command == "clear-and-type":
         ui.clear_and_type(args.text)
         print(f"Cleared and typed \"{args.text}\"")
+
+    elif args.command == "scroll":
+        if args.direction == "down":
+            ui.scroll_down(args.distance)
+            print(f"Scrolled down {args.distance}pt")
+        else:
+            ui.scroll_up(args.distance)
+            print(f"Scrolled up {args.distance}pt")
+
+    elif args.command == "dump-labels":
+        labels = ui.dump_labels()
+        for label in labels:
+            print(label)
 
     elif args.command == "screen-size":
         w, h = ui.screen_size()

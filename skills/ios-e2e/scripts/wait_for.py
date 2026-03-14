@@ -60,6 +60,21 @@ def wait_for_element(
     )
 
 
+def wait_for_element_gone(
+    ui,
+    label: str,
+    timeout: float = 8.0,
+    interval: float = 0.5,
+) -> bool:
+    """Wait until an element with label disappears from the UI tree."""
+    return wait_for(
+        lambda: not ui.element_exists(label),
+        timeout=timeout,
+        interval=interval,
+        message=f"Element '{label}' still visible after {timeout}s",
+    )
+
+
 # ======================================================================
 # CLI interface
 # ======================================================================
@@ -70,20 +85,35 @@ def main() -> None:
     sub = parser.add_subparsers(dest="command", required=True)
 
     # element
-    elem_p = sub.add_parser("element", help="Wait for element by label")
+    elem_p = sub.add_parser("element", help="Wait for element to appear")
     elem_p.add_argument("--label", required=True)
     elem_p.add_argument("--timeout", type=float, default=8.0)
     elem_p.add_argument("--interval", type=float, default=0.5)
 
+    # gone
+    gone_p = sub.add_parser("gone", help="Wait for element to disappear")
+    gone_p.add_argument("--label", required=True)
+    gone_p.add_argument("--timeout", type=float, default=8.0)
+    gone_p.add_argument("--interval", type=float, default=0.5)
+
     args = parser.parse_args()
 
     if args.command == "element":
-        # Import here to avoid circular deps when used as library
         from ui_driver import UIDriver
         ui = UIDriver(args.udid)
         try:
             x, y = wait_for_element(ui, args.label, args.timeout, args.interval)
             print(f"Found \"{args.label}\" at ({x}, {y})")
+        except WaitTimeout as e:
+            print(str(e), file=sys.stderr)
+            sys.exit(1)
+
+    elif args.command == "gone":
+        from ui_driver import UIDriver
+        ui = UIDriver(args.udid)
+        try:
+            wait_for_element_gone(ui, args.label, args.timeout, args.interval)
+            print(f"Element \"{args.label}\" is gone")
         except WaitTimeout as e:
             print(str(e), file=sys.stderr)
             sys.exit(1)

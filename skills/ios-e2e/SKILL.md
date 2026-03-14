@@ -162,6 +162,10 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/ui_driver.py swipe --direction left --y 400 
 # Pull to refresh
 python3 ${CLAUDE_SKILL_DIR}/scripts/ui_driver.py refresh --udid <UDID>
 
+# Scroll down/up
+python3 ${CLAUDE_SKILL_DIR}/scripts/ui_driver.py scroll --direction down --udid <UDID>
+python3 ${CLAUDE_SKILL_DIR}/scripts/ui_driver.py scroll --direction up --distance 500 --udid <UDID>
+
 # Find an element by label (returns coordinates)
 python3 ${CLAUDE_SKILL_DIR}/scripts/ui_driver.py find --label "Submit" --udid <UDID>
 
@@ -174,9 +178,14 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/ui_driver.py type-text --text "hello" --udid
 # Clear field and type new text
 python3 ${CLAUDE_SKILL_DIR}/scripts/ui_driver.py clear-and-type --text "new value" --udid <UDID>
 
+# Dump all labels in the UI tree (useful for debugging)
+python3 ${CLAUDE_SKILL_DIR}/scripts/ui_driver.py dump-labels --udid <UDID>
+
 # Get screen size
 python3 ${CLAUDE_SKILL_DIR}/scripts/ui_driver.py screen-size --udid <UDID>
 ```
+
+**Note:** `tap --label` automatically falls back to coordinate-based tapping if AXe's native label tap fails.
 
 ### sim_controller.py — Simulator Lifecycle
 
@@ -195,8 +204,14 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/sim_controller.py relaunch --bundle-id com.e
 # Screenshot
 python3 ${CLAUDE_SKILL_DIR}/scripts/sim_controller.py screenshot --path /tmp/screenshot.png --udid <UDID>
 
-# Clear app data (SwiftData/CoreData stores)
+# Clear all app data (uninstall/reinstall — also wipes UserDefaults)
 python3 ${CLAUDE_SKILL_DIR}/scripts/sim_controller.py clear-data --bundle-id com.example.app --udid <UDID>
+
+# Clear data with explicit app path for reinstall
+python3 ${CLAUDE_SKILL_DIR}/scripts/sim_controller.py clear-data --bundle-id com.example.app --app-path /path/to/App.app --udid <UDID>
+
+# Read app debug log from container
+python3 ${CLAUDE_SKILL_DIR}/scripts/sim_controller.py get-log --filename debug.log --bundle-id com.example.app --udid <UDID>
 
 # Boot simulator (if not already booted)
 python3 ${CLAUDE_SKILL_DIR}/scripts/sim_controller.py boot --udid <UDID>
@@ -204,7 +219,7 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/sim_controller.py boot --udid <UDID>
 
 ### wait_for.py — Polling Utilities
 
-Wait for UI elements to appear before interacting:
+Wait for UI elements to appear or disappear before interacting:
 
 ```bash
 # Wait for element to appear (default 8s timeout)
@@ -212,6 +227,9 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/wait_for.py element --label "Welcome" --udid
 
 # Wait with custom timeout
 python3 ${CLAUDE_SKILL_DIR}/scripts/wait_for.py element --label "Loaded" --timeout 15 --udid <UDID>
+
+# Wait for element to disappear (e.g. loading spinner)
+python3 ${CLAUDE_SKILL_DIR}/scripts/wait_for.py gone --label "Loading..." --udid <UDID>
 ```
 
 ## Testing Workflow
@@ -233,3 +251,5 @@ A typical interactive testing session:
 5. **Apps don't always sync on launch** — if your app uses server-side data, you may need to pull-to-refresh after launch to trigger a sync.
 6. **Wait before asserting** — UI updates are async. Use the `wait_for.py` script or add short delays after interactions.
 7. **Terminate before data setup** — if your app has background sync, terminate it before writing test data to the backend to avoid database lock contention.
+8. **UserDefaults persists outside the app container** — deleting container files won't clear UserDefaults on the simulator. Use uninstall/reinstall (`clear-data` command) for a true clean slate.
+9. **Multiple elements with same label** — buttons and headings often share labels (e.g. "Create Account"). Use `find_all_elements()` and pick the right match (usually the last one is the button).
