@@ -137,7 +137,7 @@ xcrun simctl push <UDID> com.example.app /path/to/payload.json
 
 ## Helper Scripts
 
-This skill includes Python helper scripts in `${CLAUDE_SKILL_DIR}/scripts/` for more complex operations. They require Python 3.10+ and no external dependencies.
+This skill includes Python helper scripts in the `scripts/` subdirectory (located next to this SKILL.md file). They require Python 3.10+ and no external dependencies. Find the absolute path to the scripts by locating this skill's directory.
 
 ### ui_driver.py — AXe Wrapper
 
@@ -145,44 +145,44 @@ Provides a `UIDriver` class for programmatic UI automation:
 
 ```bash
 # Describe current UI as formatted text
-python3 ${CLAUDE_SKILL_DIR}/scripts/ui_driver.py describe --udid <UDID>
+python3 scripts/ui_driver.py describe --udid <UDID>
 
 # Tap by label
-python3 ${CLAUDE_SKILL_DIR}/scripts/ui_driver.py tap --label "Save" --udid <UDID>
+python3 scripts/ui_driver.py tap --label "Save" --udid <UDID>
 
 # Tap by coordinates
-python3 ${CLAUDE_SKILL_DIR}/scripts/ui_driver.py tap --x 200 --y 400 --udid <UDID>
+python3 scripts/ui_driver.py tap --x 200 --y 400 --udid <UDID>
 
 # Swipe right (e.g. to complete an item)
-python3 ${CLAUDE_SKILL_DIR}/scripts/ui_driver.py swipe --direction right --y 400 --udid <UDID>
+python3 scripts/ui_driver.py swipe --direction right --y 400 --udid <UDID>
 
 # Swipe left (e.g. to dismiss or skip)
-python3 ${CLAUDE_SKILL_DIR}/scripts/ui_driver.py swipe --direction left --y 400 --udid <UDID>
+python3 scripts/ui_driver.py swipe --direction left --y 400 --udid <UDID>
 
 # Pull to refresh
-python3 ${CLAUDE_SKILL_DIR}/scripts/ui_driver.py refresh --udid <UDID>
+python3 scripts/ui_driver.py refresh --udid <UDID>
 
 # Scroll down/up
-python3 ${CLAUDE_SKILL_DIR}/scripts/ui_driver.py scroll --direction down --udid <UDID>
-python3 ${CLAUDE_SKILL_DIR}/scripts/ui_driver.py scroll --direction up --distance 500 --udid <UDID>
+python3 scripts/ui_driver.py scroll --direction down --udid <UDID>
+python3 scripts/ui_driver.py scroll --direction up --distance 500 --udid <UDID>
 
 # Find an element by label (returns coordinates)
-python3 ${CLAUDE_SKILL_DIR}/scripts/ui_driver.py find --label "Submit" --udid <UDID>
+python3 scripts/ui_driver.py find --label "Submit" --udid <UDID>
 
 # Check if element exists
-python3 ${CLAUDE_SKILL_DIR}/scripts/ui_driver.py exists --label "Error" --udid <UDID>
+python3 scripts/ui_driver.py exists --label "Error" --udid <UDID>
 
 # Type text into focused field
-python3 ${CLAUDE_SKILL_DIR}/scripts/ui_driver.py type-text --text "hello" --udid <UDID>
+python3 scripts/ui_driver.py type-text --text "hello" --udid <UDID>
 
 # Clear field and type new text
-python3 ${CLAUDE_SKILL_DIR}/scripts/ui_driver.py clear-and-type --text "new value" --udid <UDID>
+python3 scripts/ui_driver.py clear-and-type --text "new value" --udid <UDID>
 
 # Dump all labels in the UI tree (useful for debugging)
-python3 ${CLAUDE_SKILL_DIR}/scripts/ui_driver.py dump-labels --udid <UDID>
+python3 scripts/ui_driver.py dump-labels --udid <UDID>
 
 # Get screen size
-python3 ${CLAUDE_SKILL_DIR}/scripts/ui_driver.py screen-size --udid <UDID>
+python3 scripts/ui_driver.py screen-size --udid <UDID>
 ```
 
 **Note:** `tap --label` automatically falls back to coordinate-based tapping if AXe's native label tap fails.
@@ -193,28 +193,28 @@ Provides a `SimController` class for app lifecycle management:
 
 ```bash
 # Launch app
-python3 ${CLAUDE_SKILL_DIR}/scripts/sim_controller.py launch --bundle-id com.example.app --udid <UDID>
+python3 scripts/sim_controller.py launch --bundle-id com.example.app --udid <UDID>
 
 # Terminate app
-python3 ${CLAUDE_SKILL_DIR}/scripts/sim_controller.py terminate --bundle-id com.example.app --udid <UDID>
+python3 scripts/sim_controller.py terminate --bundle-id com.example.app --udid <UDID>
 
 # Relaunch (terminate + launch)
-python3 ${CLAUDE_SKILL_DIR}/scripts/sim_controller.py relaunch --bundle-id com.example.app --udid <UDID>
+python3 scripts/sim_controller.py relaunch --bundle-id com.example.app --udid <UDID>
 
 # Screenshot
-python3 ${CLAUDE_SKILL_DIR}/scripts/sim_controller.py screenshot --path /tmp/screenshot.png --udid <UDID>
+python3 scripts/sim_controller.py screenshot --path /tmp/screenshot.png --udid <UDID>
 
 # Clear all app data (uninstall/reinstall — also wipes UserDefaults)
-python3 ${CLAUDE_SKILL_DIR}/scripts/sim_controller.py clear-data --bundle-id com.example.app --udid <UDID>
+python3 scripts/sim_controller.py clear-data --bundle-id com.example.app --udid <UDID>
 
 # Clear data with explicit app path for reinstall
-python3 ${CLAUDE_SKILL_DIR}/scripts/sim_controller.py clear-data --bundle-id com.example.app --app-path /path/to/App.app --udid <UDID>
+python3 scripts/sim_controller.py clear-data --bundle-id com.example.app --app-path /path/to/App.app --udid <UDID>
 
 # Read app debug log from container
-python3 ${CLAUDE_SKILL_DIR}/scripts/sim_controller.py get-log --filename debug.log --bundle-id com.example.app --udid <UDID>
+python3 scripts/sim_controller.py get-log --filename debug.log --bundle-id com.example.app --udid <UDID>
 
 # Boot simulator (if not already booted)
-python3 ${CLAUDE_SKILL_DIR}/scripts/sim_controller.py boot --udid <UDID>
+python3 scripts/sim_controller.py boot --udid <UDID>
 ```
 
 ### wait_for.py — Polling Utilities
@@ -223,14 +223,16 @@ Wait for UI elements to appear or disappear before interacting:
 
 ```bash
 # Wait for element to appear (default 8s timeout)
-python3 ${CLAUDE_SKILL_DIR}/scripts/wait_for.py element --label "Welcome" --udid <UDID>
+python3 scripts/wait_for.py element --label "Welcome" --udid <UDID>
 
 # Wait with custom timeout
-python3 ${CLAUDE_SKILL_DIR}/scripts/wait_for.py element --label "Loaded" --timeout 15 --udid <UDID>
+python3 scripts/wait_for.py element --label "Loaded" --timeout 15 --udid <UDID>
 
 # Wait for element to disappear (e.g. loading spinner)
-python3 ${CLAUDE_SKILL_DIR}/scripts/wait_for.py gone --label "Loading..." --udid <UDID>
+python3 scripts/wait_for.py gone --label "Loading..." --udid <UDID>
 ```
+
+**Important:** All script paths above are relative to this skill's directory. When running them, use the full path to the `scripts/` folder within this skill. For example, if this skill is installed at `/path/to/skills/ios-e2e/`, run `python3 /path/to/skills/ios-e2e/scripts/ui_driver.py ...`.
 
 ## Testing Workflow
 
